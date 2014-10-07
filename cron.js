@@ -1,11 +1,11 @@
-var Config = require('./config');
-
-var Spotify = require('./lib/spotify');
-Spotify.credentials = Config.spotify;
+var Config = require('./config.json');
 
 var Utils = require('./lib/utils');
 var TTS = require('ttsay');
 var Q = require('q');
+
+var Spotify = require('./lib/spotify');
+Spotify.credentials = Config.spotify;
 
 var FB = require('fb');
 FB.setAccessToken(Config.facebook.accessToken);
@@ -15,29 +15,18 @@ Moment.locale("it");
 
 
 function startSpotify() {
-	var defer = Q.defer();
+	var q = Q.defer();
 
 	Spotify.login(function() {
 		Spotify.getStarredTracks(function(tracks) {
-
 			Spotify.playListOfTracks(tracks);
 
-			defer.resolve();
+			q.resolve();
 
 		});
 	});
 
-	return defer.promise;
-}
-
-function fadeIn(from, to, duration) {
-	var defer = Q.defer();
-
-	Utils.fadeVolume(from, to, duration, function() {
-		defer.resolve();
-	});
-
-	return defer.promise;
+	return q.promise;
 }
 
 function wait(t) {
@@ -47,49 +36,44 @@ function wait(t) {
 }
 
 function sayGoodMorning() {
-	var defer = Q.defer();
+	var q = Q.defer();
 
 	TTS("Buongiorno, Flavio!", null, function(){
-		TTS("Oggi è "+Moment().format('dddd D MMMM')+", sono le "+Moment().format('HH [e] mm')+
-		" e stiamo ascoltando "+Spotify.currentTrack.name+" di "+Spotify.currentTrack.artists[0].name,
-		null, defer.resolve);
+		TTS("Oggi è " + Moment().format('dddd D MMMM') + ", sono le " + Moment().format('HH [e] mm') + " e stiamo ascoltando " + Spotify.currentTrack.name + " di " + Spotify.currentTrack.artists[0].name, null, q.resolve);
 	});
 
-	return defer.promise;
+	return q.promise;
 }
 
 function sayForecast() {
-	var defer = Q.defer();
+	var q = Q.defer();
 
 	Utils.getForecast(function(forecast) {
-		TTS("Il tempo previsto per oggi indica "+forecast.conditions+", con una temperatura media di "+forecast.average+" gradi",
-		null, defer.resolve);
+		TTS("Il tempo previsto per oggi indica " + forecast.conditions + ", con una temperatura media di " + forecast.average + " gradi",
+		null, q.resolve);
 	});
 
-	return defer.promise;
+	return q.promise;
 }
 
 function sayNotifications() {
-	var defer = Q.defer();
+	var q = Q.defer();
 
 	FB.api('/me/notifications', function(res) {
-		if (!res || res.error || !res.data) return;
+		if (res.error == null || _.isObject(res.data)) return;
 
 		var count = 0;
 		res.data.forEach(function(t) {
 			if (t.unread) count++;
 		});
 
-		TTS("Hai "+count+" notifiche non lette su Facebook.", null, defer.resolve);
+		TTS("Hai " + count + " notifiche non lette su Facebook.", null, q.resolve);
 	});
 
-	return defer.promise;
+	return q.promise;
 }
 
-Utils.getForecast(function(forecast) {
-	console.log(forecast);
-});
-
+sayNotifications();
 
 startSpotify()
 

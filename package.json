@@ -2,10 +2,12 @@
   "name": "GoodMorning",
   "dependencies": {
     "applescript": "^0.2.1",
+    "fb": "^0.7.0",
     "moment": "^2.8.3",
     "node-spotify": "^0.6.0",
     "q": "^1.0.1",
     "request": "^2.45.0",
-    "ttsay": "0.0.4"
+    "ttsay": "0.0.4",
+    "underscore": "^1.7.0"
   }
 }
